@@ -18,6 +18,7 @@ client = bigquery.Client()
 init_sql = Path('init.sql')
 get_symbol_files_sql = Path('get_symbol_files.sql')
 init_symbol_files_sql = Path('init_symbol_files.sql')
+symbolicate_crash_pings_sql = Path('symbolicate_crash_pings.sql')
 
 
 def query(q: str) -> Iterator[bigquery.Row]:
@@ -76,7 +77,8 @@ def insert_file_rows(file_path: str) -> int:
 @click.option('--refresh', default=False, is_flag=True)
 @click.option('--download', default=False, is_flag=True)
 @click.option('--insert', default=False, is_flag=True)
-def main(refresh: bool, download: bool, insert: bool):
+@click.option('--symbolicate', default=False, is_flag=True)
+def main(refresh: bool, download: bool, insert: bool, symbolicate: bool):
     if refresh:
         query(init_sql.read_text())
     rows = query(get_symbol_files_sql.read_text())
@@ -90,6 +92,9 @@ def main(refresh: bool, download: bool, insert: bool):
         query(init_symbol_files_sql.read_text())
         for file_path in files:
             insert_file_rows(file_path)
+
+    if symbolicate:
+        query(symbolicate_crash_pings_sql.read_text())
 
 if __name__ == '__main__':
     main()
